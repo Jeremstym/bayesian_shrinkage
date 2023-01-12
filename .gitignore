@@ -30,3 +30,4 @@ share/python-wheels/
 *.egg
 MANIFEST
 *.txt
+.vscode/launch.json
