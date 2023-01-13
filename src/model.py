@@ -88,6 +88,4 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[1,1]):
         return lam_pos, beta_pos, alpha_pos
     else:    
         return lam_pos, u_pos, beta_pos, alpha_pos, gam_pos 
-
-
-GLSP_count(np.ones(3))
+        
