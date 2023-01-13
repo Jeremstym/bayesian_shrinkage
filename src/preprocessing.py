@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 
 df2020 = pd.read_fwf('data/deces-2020.txt')
 df2021 = pd.read_fwf('data/deces-2021.txt')
@@ -54,3 +55,9 @@ df_dep = pd.DataFrame({i:[int(df2020.loc[(i,j)].count()[0]) if (i,j) in df2020.i
 #Now we have a dataframe with all the death by day by county
 
 df_dep.to_csv('data/countdeath2020.csv')
+
+dfspatial = gpd.read_file("./data/contour-des-departements.geojson") 
+dfspatial.drop(["nom"])
+dfspatial.set_index("code")
+
+dfspatial.to_geojson('data/countdeath2020.csv')

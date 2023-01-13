@@ -7,6 +7,7 @@ import numpy as np
 import numpy.random as nprd
 import scipy.stats as spst
 import scipy.special as spsp
+from scipy.optimize import fsolve
 
 
 
@@ -43,7 +44,7 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[1,1]):
             W = nprd.gamma(1+V, 1+u, m)
             
             for i in range(m):
-                u[i] = spst.geninvgauss(p=1-alpha, b=2*beta*lam[i]+2*W[i]).rvs() # is 'psi' scaling parameter or addition to b? 
+                u[i] = spst.geninvgauss(p=1-alpha, b=2*beta*lam[i]+2*W[i]).rvs()
             
             u_pos[r,:] = u
             ss = np.sum(np.log(1+np.log(1+u)))
@@ -88,4 +89,46 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[1,1]):
         return lam_pos, beta_pos, alpha_pos
     else:    
         return lam_pos, u_pos, beta_pos, alpha_pos, gam_pos 
-        
+    
+
+#GLSP with regression : 
+
+class GlspRegModel : 
+    def __init__(self, timedata, covariables, ):
+        self.timedata = timedata
+        self.covariables = covariables
+        self.lamb = nprd.gamma(covariables.shape[0])
+
+    def equation_deltahat(self, delta):
+        root_to_find = sum([(self.timedata.loc[county].T - self.lamb[county] * np.exp(delta.T @ self.covariables.loc[county,:]))*self.covariables.loc[county] for county in self.covariables.index])
+        return root_to_find
+
+    def second_derivative_deltahat(self,delta):
+        index_init = self.covariables.index[0]
+        county = -self.lamb[index_init]*np.exp(self.covariables[index_init]@delta)*self.covariables[index_init]@self.covariables[index_init].T
+        for county in self.covariables.index[1:]:
+            second_derivative -= self.lamb[county]*np.exp(self.covariables[county]@delta)*self.covariables[county]@self.covariables[county].T
+        return second_derivative
+
+    def make_proposal(self, previous_delta):
+        sol_deltahat, = fsolve(self.equation_deltahat, previous_delta, fprime = self.second_derivative_deltahat)
+        precision = self.second_derivative_deltahat(sol_deltahat)
+        proposal = (nprd.normal(sol_deltahat.shape) + sol_deltahat)@np.sqrt(precision)
+        return proposal
+
+    def dens_delta(self, delta):
+        value = 0
+        for county in self.covariables.index:
+            value += (np.log(self.lamb[county]) + self.covariables.loc[county]@delta)*self.timedata.loc[county] - self.lamb[county]*np.exp(self.covariables.loc[county]@delta) - sum(i for i in range(self.covariables.loc[county]))
+        return value
+
+    def step(self, original):
+        proposal = self.make_proposal(original)
+        if np.log(nprd.uniform()) < self.dens(proposal) - self.dens(original)
+            return proposal
+        else :
+            return original
+
+    def sample(self) :
+
+        return None
