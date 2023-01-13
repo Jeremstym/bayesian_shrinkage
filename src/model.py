@@ -11,6 +11,13 @@ from scipy.optimize import fsolve
 
 
 
+## GLSP given adjusment term
+
+# Y: vector of response counts
+# eta: vector of adjustment factors
+# prior: IG, EH or PG 
+# HP: hyperparameters of gamma prior
+
 def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[1,1]):
     m = len(Y)
     MC = mc + burn
@@ -124,7 +131,7 @@ class GlspRegModel :
 
     def step(self, original):
         proposal = self.make_proposal(original)
-        if np.log(nprd.uniform()) < self.dens(proposal) - self.dens(original)
+        if np.log(nprd.uniform()) < self.dens(proposal) - self.dens(original):
             return proposal
         else :
             return original
