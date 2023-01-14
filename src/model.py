@@ -118,7 +118,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
     
     ## MCMC sample box
     Lam_pos = np.full((MC, number_observation), np.nan)
-    U_pos = np.full((MC, number_observation), np.nan)
+    u_pos = np.full((MC, number_observation), np.nan)
     Beta_pos = np.full(MC, np.nan)
     Alpha_pos = np.full(MC, np.nan)
     Gam_pos = np.full(MC, np.nan)
@@ -134,21 +134,20 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
 
     beta = alpha = gam = 1
     
-    Reg = sm.GLM(Y, X, family=sm.families.Poisson(), offset=offset).fit().params[1:]
+    Reg = sm.GLM(Y, X, family=sm.families.Poisson(), offset=offset).fit().params
     # Reg = [Reg[i] for i in Reg.index]
     
     ## MCMC iterations
-    for iteration in range(MC) :
+    for iteration in range(MC):
         # Regression part
         Q = lambda delta: X.T@(Y - Lam*np.exp(offset + X@delta))
         hReg = fsolve(Q, Reg)   # mode
         hmu = Lam*np.exp(offset + X@hReg) 
-        mS = (X@hmu).T@X
+        mS = (X.T*hmu)@X
         A1 = npln.inv(mS + Om)
         A2 = A1@(mS@hReg)
         # Reg_prop = A1.T@nprd.randn(hReg.shape) + hReg  # proposal 
-        Reg_prop = nprd.normal(A2, A1) 
-        
+        Reg_prop = nprd.randn(3)@sqrtm(A1) + A2
         T1 = Y.T@X@(Reg_prop-Reg) - np.sum(Lam*np.exp(offset + X@Reg_prop) - np.exp(offset + X@Reg))
         T2 = 0.5*((Reg_prop-hReg).T@mS@(Reg_prop-hReg) - (Reg-hReg).T@mS@(Reg-hReg))  
         log_ratio = T1 + T2
@@ -171,7 +170,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
             for i in range(number_observation):
                 u[i] = spst.geninvgauss(p=1-alpha, b=2*beta*lam[i]+2*W[i]).rvs()
             
-            U_pos[iteration,:] = u
+            u_pos[iteration,:] = u
             ss = np.sum(np.log(1+np.log(1+u)))
             gam = nprd.gamma(HP[0]+number_observation, HP[1]+ss, 1)
             Gam_pos[iteration] = gam
@@ -217,7 +216,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
     else:
         return Lam_pos, u_pos, Beta_pos, Alpha_pos, Gam_pos, Reg_pos
 
-Y_try = nprd.randint(20, size=7)
-X_try = nprd.rand(7,7)
+Y_try = nprd.randint(20, size=50)
+X_try = nprd.rand(50,3)
 
 GLSP_count_reg(Y_try, X_try)
