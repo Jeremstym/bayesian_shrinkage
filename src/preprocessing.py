@@ -61,3 +61,15 @@ dfspatial.drop(["nom"])
 dfspatial.set_index("code")
 
 dfspatial.to_geojson('data/countdeath2020.csv')
+
+#Importing the data for the covariables : 
+
+dic_demographie = pd.read_excel("./data/covariables_demographiques.xlsx",sheet_name = [2, 3], header = [0,0], skiprows = 2, nrows = 101)
+
+df_covariables = dic_demographie[2].merge(dic_demographie[3], on=(('DEP','DEP'),('DEP','DEP')))
+df_covariables.columns = ['Departement','nom_depart1', 'Densite', 'nom_depart2', '25ans']
+df_covariables.drop(["nom_depart1",'nom_depart2'], inplace = True, axis = 1)
+df_covariables.sort_values("Departement")
+
+#AGAINNN a df for death from covid only this time during the first wave : 
+dfcovid = pd.read_csv('data/DC_covid_1erevague.csv', delimiter=";", header = 0, parse_dates = ['jour'])
