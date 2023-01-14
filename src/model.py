@@ -20,7 +20,7 @@ from scipy.optimize import fsolve
 # prior: IG, EH or PG 
 # HP: hyperparameters of gamma prior
 
-def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[1,1]):
+def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
     m = len(Y)
     MC = mc + burn
 
