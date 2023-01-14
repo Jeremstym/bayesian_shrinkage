@@ -1,0 +1,26 @@
+dependencies:
+  # Env
+  - python=3.10.*  # or don't specify the version and use the latest stable Python
+  - mamba=1.0.0
+  - conda-lock=1.2.1
+  - pip=22.3.1
+  # Other classic data and ML packages
+  - numpy=1.23
+  - pandas=1.5
+  - geopandas=0.12
+  - scipy=1.9
+  - statsmodels=0.13
+  # Plots
+  - matplotlib=3.6
+  - seaborn=0.12
+  - plotly=5.11
+  - topojson=1.5
+  # Jupyter
+  - jupyter=1.0
+  - notebook=6.5
+  - ipywidgets=7.6
+  # Formatter
+  - black=22.10
+  - pylint=2.15
+  - isort=5.10
+  - mypy=0.991
