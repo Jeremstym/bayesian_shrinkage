@@ -101,48 +101,6 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
         return lam_pos, u_pos, beta_pos, alpha_pos, gam_pos 
     
 
-#GLSP with regression : 
-
-class GlspRegModel : 
-    def __init__(self, timedata, covariables, ):
-        self.timedata = timedata
-        self.covariables = covariables
-        self.lamb = nprd.gamma(covariables.shape[0])
-
-    def equation_deltahat(self, delta):
-        root_to_find = sum([(self.timedata.loc[county].T - self.lamb[county] * np.exp(delta.T @ self.covariables.loc[county,:]))*self.covariables.loc[county] for county in self.covariables.index])
-        return root_to_find
-
-    def second_derivative_deltahat(self,delta):
-        index_init = self.covariables.index[0]
-        county = -self.lamb[index_init]*np.exp(self.covariables[index_init]@delta)*self.covariables[index_init]@self.covariables[index_init].T
-        for county in self.covariables.index[1:]:
-            second_derivative -= self.lamb[county]*np.exp(self.covariables[county]@delta)*self.covariables[county]@self.covariables[county].T
-        return second_derivative
-
-    def make_proposal(self, previous_delta):
-        sol_deltahat, = fsolve(self.equation_deltahat, previous_delta, fprime = self.second_derivative_deltahat)
-        precision = self.second_derivative_deltahat(sol_deltahat)
-        proposal = (nprd.normal(sol_deltahat.shape) + sol_deltahat)@np.sqrt(precision)
-        return proposal
-
-    def dens_delta(self, delta):
-        value = 0
-        for county in self.covariables.index:
-            value += (np.log(self.lamb[county]) + self.covariables.loc[county]@delta)*self.timedata.loc[county] - self.lamb[county]*np.exp(self.covariables.loc[county]@delta) - sum(i for i in range(self.covariables.loc[county]))
-        return value
-
-    def step(self, original):
-        proposal = self.make_proposal(original)
-        if np.log(nprd.uniform()) < self.dens(proposal) - self.dens(original):
-            return proposal
-        else :
-            return original
-
-    def sample(self) :
-
-        return None
-
 ###  GLSP with regression   ###
 # Y: vector of response counts 
 # X: matrix of covaraites 
@@ -151,33 +109,33 @@ class GlspRegModel :
 # HP: hyperparameter of gamma prior
 
 def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) :
-    number_observation = Y.shape[0]     # number of observations (before : m)
-    number_covariables = X.shape[2]                # number of covariables (before : p)
+    number_observation = len(Y)    # number of observations (before : m)
+    number_covariables = X.shape[1]                # number of covariables (before : p)
     MC = mc + burn    # length of MCMC
     if offset == None :
-         offset = [1 for i in range(number_observation)]
-    Om = (1/100)*np.diag(number_covariables)    # precision for priors in regression coeffieicnts
+         offset = np.ones(number_observation)
+    Om =np.eye(number_covariables)/100 # precision for priors in regression coeffieicnts
     
     ## MCMC sample box
-    Lam_pos = np.zeros(MC, number_observation)
-    U_pos = np.zeros(MC, number_observation)
-    Beta_pos = []
-    Alpha_pos = []
-    Gam_pos = []
-    Reg_pos = np.zeros(MC, number_covariables)
+    Lam_pos = np.full((MC, number_observation), np.nan)
+    U_pos = np.full((MC, number_observation), np.nan)
+    Beta_pos = np.full(MC, np.nan)
+    Alpha_pos = np.full(MC, np.nan)
+    Gam_pos = np.full(MC, np.nan)
+    Reg_pos = np.full((MC, number_covariables), np.nan)
     
     
     ## initial values
     Lam = Nu = Y + 0.1
-    u = [1 for i in range(number_observation)]
+    u = np.ones(number_observation)
 
     if prior =="EH": 
-        V = W = [1 for i in range(number_observation)]
+        V = W = np.ones(number_observation)
 
-    Beta = Alpha = Gam = 1
-
-    Reg = sm.GLM(Y, X, family=sm.families.Poisson()).fit().params()
-    Reg = [Reg[i] for i in Reg.index]
+    beta = alpha = gam = 1
+    
+    Reg = sm.GLM(Y, X, family=sm.families.Poisson(), offset=offset).fit().params[1:]
+    # Reg = [Reg[i] for i in Reg.index]
     
     ## MCMC iterations
     for iteration in range(MC) :
@@ -186,11 +144,12 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         hReg = fsolve(Q, Reg)   # mode
         hmu = Lam*np.exp(offset + X@hReg) 
         mS = (X@hmu).T@X
-        A1 = sqrtm(npln. inv(mS + Om))
-        #A2 = as.vector( A1%*%( mS%*%hReg ) )
-        Reg_prop = A1.T@nprd.randn(hReg.shape) + hReg  # proposal 
+        A1 = npln.inv(mS + Om)
+        A2 = A1@(mS@hReg)
+        # Reg_prop = A1.T@nprd.randn(hReg.shape) + hReg  # proposal 
+        Reg_prop = nprd.normal(A2, A1) 
         
-        T1 = Y.T@X@(Reg_prop-Reg) - sum( Lam.T@np.exp(offset + X@Reg_prop) - np.exp(offset + X@Reg))
+        T1 = Y.T@X@(Reg_prop-Reg) - np.sum(Lam*np.exp(offset + X@Reg_prop) - np.exp(offset + X@Reg))
         T2 = 0.5*((Reg_prop-hReg).T@mS@(Reg_prop-hReg) - (Reg-hReg).T@mS@(Reg-hReg))  
         log_ratio = T1 + T2
         pp = min(np.exp(log_ratio), 1)
@@ -199,6 +158,8 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         Eta = np.exp(offset + X@Reg)    # adjustment term
         Reg_pos[iteration,:] = Reg
         
+        # Lambda
+
         lam = nprd.gamma(Y+alpha, 1/(Eta+beta/u), number_observation)
         Lam_pos[iteration,:] = lam
 
@@ -234,7 +195,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
 
         # alpha
         alpha = nprd.gamma(HP[0]+np.sum(Nu), HP[1]+np.sum(np.log(1+Eta*u/beta)))
-        Beta_pos[iteration] = alpha
+        Alpha_pos[iteration] = alpha
 
         # nu
         for i in range(number_observation):
@@ -245,13 +206,18 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
                 Nu[i] = np.sum(nprd.binomial(1, pp, len(pp)))
     
     # Summary
-    Lam_pos = Lam.pos[burn:,]
+    Lam_pos = Lam_pos[burn:,]
     u_pos = u_pos[burn:,]
     Beta_pos = Beta_pos[burn:]
     Alpha_pos = Alpha_pos[burn:]
     Gam_pos = Gam_pos[burn:]
     Reg_pos = Reg_pos[burn:,]
-    Res = {"Lambda" : Lam_pos, "u" : u_pos, "Beta" : Beta_pos, "Alpha" : Alpha_pos, "Gamma" : Gam_pos, "Reg" : Reg_pos}
     if prior=="PG":
-        Res = {"Lambda" : Lam_pos, "Beta" : Beta_pos, "Alpha" : Alpha_pos, "Reg" : Reg_pos}
-    return(Res)
+        return Lam_pos, Beta_pos, Alpha_pos, Reg_pos
+    else:
+        return Lam_pos, u_pos, Beta_pos, Alpha_pos, Gam_pos, Reg_pos
+
+Y_try = nprd.randint(20, size=7)
+X_try = nprd.rand(7,7)
+
+GLSP_count_reg(Y_try, X_try)
