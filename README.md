@@ -23,3 +23,9 @@ Then, yo can install all packages and dependencies with the yml file
 ```bash
 conda env update -f environment.yml
 ```
+If you want to try the visualization, you have to use special packages (not in the yml file)
+
+```bash
+pip install requests py7zr geopandas openpyxl tqdm s3fs PyYAML xlrd
+pip install git+https://github.com/inseefrlab/cartogether
+```
