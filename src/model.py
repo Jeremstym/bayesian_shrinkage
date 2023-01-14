@@ -50,15 +50,15 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
 
         # U and Gam (EH prior)
         if prior == 'EH':
-            V = nprd.gamma(1+gam, 1+np.log(1+u), m)
-            W = nprd.gamma(1+V, 1+u, m)
+            V = nprd.gamma(1+gam, 1/(1+np.log(1+u)), m)
+            W = nprd.gamma(1+V, 1/(1+u), m)
             
             for i in range(m):
                 u[i] = spst.geninvgauss(p=1-alpha, b=2*beta*lam[i]+2*W[i]).rvs()
             
             u_pos[r,:] = u
             ss = np.sum(np.log(1+np.log(1+u)))
-            gam = nprd.gamma(HP[0]+m, HP[1]+ss, 1)
+            gam = nprd.gamma(HP[0]+m, 1/(HP[1]+ss))
             gam_pos[r] = gam
         
         ## u and gam (IG prior)
@@ -75,11 +75,11 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
             gam_pos[r] = gam
         
         # beta
-        beta = nprd.gamma(HP[0]+m*alpha, HP[1]+np.sum(lam/u))
+        beta = nprd.gamma(HP[0]+m*alpha, 1/(HP[1]+np.sum(lam/u)))
         beta_pos[r] = beta
 
         # alpha
-        alpha = nprd.gamma(HP[0]+np.sum(nu), HP[1]+np.sum(np.log(1+eta*u/beta)))
+        alpha = nprd.gamma(HP[0]+np.sum(nu), 1/(HP[1]+np.sum(np.log(1+eta*u/beta))))
         alpha_pos[r] = alpha
 
         # nu
@@ -90,10 +90,11 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
                 pp = alpha/(np.arange(1,Y[i]+1)-1+alpha)
                 nu[i] = np.sum(nprd.binomial(1, pp, len(pp)))
     
-    # Summary omission burn : TODO 
-
-    # om = np.arange(1, burn+1)
-    # lam_pos = lam_pos[np.setdiff1d(np.arange(lam_pos.shape[0]), om),:]
+    lam_pos = lam_pos[burn:,]
+    u_pos = u_pos[burn:,]
+    beta_pos = beta_pos[burn:]
+    alpha_pos = alpha_pos[burn:]
+    gam_pos = gam_pos[burn:]
 
     if prior == 'PG':
         return lam_pos, beta_pos, alpha_pos
@@ -158,21 +159,20 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         Reg_pos[iteration,:] = Reg
         
         # Lambda
-
         lam = nprd.gamma(Y+alpha, 1/(Eta+beta/u), number_observation)
         Lam_pos[iteration,:] = lam
 
         # U and Gam (EH prior)
         if prior == 'EH':
-            V = nprd.gamma(1+gam, 1+np.log(1+u), number_observation)
-            W = nprd.gamma(1+V, 1+u, number_observation)
-            
+            V = nprd.gamma(1+gam, 1/(1+np.log(1+u)), number_observation)
+            W = nprd.gamma(1+V, 1/(1+u), number_observation)
             for i in range(number_observation):
                 u[i] = spst.geninvgauss(p=1-alpha, b=2*beta*lam[i]+2*W[i]).rvs()
+
             
             u_pos[iteration,:] = u
             ss = np.sum(np.log(1+np.log(1+u)))
-            gam = nprd.gamma(HP[0]+number_observation, HP[1]+ss, 1)
+            gam = nprd.gamma(HP[0]+number_observation, 1/(HP[1]+ss), 1)
             Gam_pos[iteration] = gam
         
         ## u and gam (IG prior)
@@ -189,11 +189,11 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
             Gam_pos[iteration] = gam
         
         # beta
-        beta = nprd.gamma(HP[0]+number_observation*alpha, HP[1]+np.sum(lam/u))
+        beta = nprd.gamma(HP[0]+number_observation*alpha, 1/(HP[1]+np.sum(lam/u)))
         Beta_pos[iteration] = beta
 
         # alpha
-        alpha = nprd.gamma(HP[0]+np.sum(Nu), HP[1]+np.sum(np.log(1+Eta*u/beta)))
+        alpha = nprd.gamma(HP[0]+np.sum(Nu), 1/(HP[1]+np.sum(np.log(1+Eta*u/beta))))
         Alpha_pos[iteration] = alpha
 
         # nu
@@ -215,8 +215,3 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         return Lam_pos, Beta_pos, Alpha_pos, Reg_pos
     else:
         return Lam_pos, u_pos, Beta_pos, Alpha_pos, Gam_pos, Reg_pos
-
-Y_try = nprd.randint(20, size=50)
-X_try = nprd.rand(50,3)
-
-GLSP_count_reg(Y_try, X_try)
