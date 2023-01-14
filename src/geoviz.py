@@ -25,3 +25,17 @@ ax = df_geo.plot(column ="Total", legend=True)
 ax.set_axis_off()
 ax.set_title("Mortality COVID-19 in 2020")
 plt.show()
+
+# Results for lambda
+
+lamdf = pd.read_csv('data/lambda.csv').set_index("Index")
+
+lamdf['geometry'] = dep['geometry'].values
+
+lamdf.rename(columns={'0':'lambda'}, inplace=True)
+lamdf_geo = gpd.GeoDataFrame(lamdf)
+
+ax = lamdf_geo.plot(column ="lambda", legend=True)
+ax.set_axis_off()
+ax.set_title("Bayensian estimate parameter of lambda for Covid")
+plt.show()
