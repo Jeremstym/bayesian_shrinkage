@@ -71,7 +71,13 @@ df_covariables.columns = ['Departement','nom_depart1', 'Densite', 'nom_depart2',
 df_covariables.drop(["nom_depart1",'nom_depart2'], inplace = True, axis = 1)
 df_covariables.drop([i if df_covariables.loc[i,"Departement"] in [971, 974, 976] else -1 for i in df_covariables.index], inplace = True, axis = 0, errors='ignore')
 
-df_covariables.to_csv('data/covariables.csv', index = False)
+df_population = pd.read_excel("./data/pop_2020.xlsx", header = [0,1], skiprows = 3, nrows = 101)
+df_population = df_population[[("Départements", 'Unnamed: 0_level_1'),('Ensemble','Total')]]
+df_population.columns = ["Departement", "pop"]
+
+df_covariables = df_covariables.merge(df_population, on=("Departement","Departement")).set_index("Departement")
+df_covariables = (df_covariables - df_covariables.mean(axis = 0))/df_covariables.std(axis = 0)
+df_covariables.to_csv('data/covariables.csv', index = True)
 
 #AGAINNN a df for death from covid only this time during the first wave : 
 dfcovid = pd.read_csv('data/DC_covid_1erevague.csv', delimiter=";", header = 0, parse_dates = ['jour'])
