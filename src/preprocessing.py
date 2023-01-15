@@ -4,29 +4,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-df2020 = pd.read_fwf('data/deces-2020.txt')
-df2021 = pd.read_fwf('data/deces-2021.txt')
-# if doesn't work, try path = '../data/deces-2020.txt'
-
-df2020.drop(['Unnamed: 1'], axis=1, inplace=True)
-df2020['mask'] = df2020['Unnamed: 3'].apply(lambda x: isinstance('str', type(x)))
-df2020 = df2020[df2020["mask"]==False].drop("mask", axis=1)
-df2020.drop('Unnamed: 3', axis=1, inplace=True)
-df2020.columns = ['Name', 'Location', 'Date']
-df2020.drop("Date", axis=1, inplace=True)
-
-df2020['Location'] = df2020['Location'].apply(lambda x: x[14:])
-df2020 = df2020.groupby(by='Location').count()
-
-df2020.to_csv('data/countdeath2020.csv')
-
-df2021.columns = ['Name', 'Location', 'Date']
-df2021['Location'] = df2021['Location'].apply(lambda x: x[14:])
-
-df2021.drop("Date", axis=1, inplace=True)
-df2021 = df2021.groupby(by='Location').count()
-df2021.to_csv('data/countdeath2021.csv')
-
 # Preprocessing for the departmental level: 
 
 df2020 = pd.read_csv('data/DC_2020_det.csv', delimiter=";", header = 0)
