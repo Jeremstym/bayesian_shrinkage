@@ -1,4 +1,4 @@
-# This to do geographical visualisation
+"""This module to use geopandas and show graphical results on a France map"""
 
 import pandas as pd
 import geopandas as gpd

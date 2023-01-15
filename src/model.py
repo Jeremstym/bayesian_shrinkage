@@ -1,5 +1,6 @@
-# This to compute the model of the paper
-
+"""This module to compute the model of the paper with the two main functions
+Use of MCMC methods (Gibbs sampling and Metropolis-Hastings
+"""
 # @authors: Jérémie Stym-Popper, Adrien Majka
 # date: 12/01/2023
 
@@ -14,14 +15,17 @@ from scipy.optimize import fsolve
 from scipy.linalg import sqrtm
 
 
-## GLSP given adjusment term
-
-# Y: vector of response counts
-# eta: vector of adjustment factors
-# prior: IG, EH or PG 
-# HP: hyperparameters of gamma prior
+###  GLSP given adjustment term   ###
 
 def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
+    """
+    Parameters:
+        Y: vector of response counts
+        eta: vector of adjustment factors
+        prior: IG, EH or PG 
+        HP: hyperparameters of gamma prior
+
+    """
     m = len(Y)
     MC = mc + burn
 
@@ -104,13 +108,16 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
     
 
 ###  GLSP with regression   ###
-# Y: vector of response counts 
-# X: matrix of covaraites 
-# offset: 
-# prior: EH or IG or PG
-# HP: hyperparameter of gamma prior
 
 def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) :
+    """
+    Parameters:
+        Y: vector of response counts 
+        X: matrix of covaraites 
+        offset: 
+        prior: EH or IG or PG
+        HP: hyperparameter of gamma prior
+    """
     number_observation = len(Y)    # number of observations (before : m)
     number_covariables = X.shape[1]                # number of covariables (before : p)
     MC = mc + burn    # length of MCMC
