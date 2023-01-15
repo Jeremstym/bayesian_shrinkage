@@ -13,10 +13,11 @@ Or download the zip from the [github](https://github.com/Jeremstym/bayesian_shri
 
 ### Create conda enviromnent
 
-You can create a conda environment before installing all packages
+You can create a conda environment before installing all packages (fist line if you work on windows, second one on linux)
 
 ```bash
- conda create -name YOURENV
+conda create --name YOURENV --file conda-osx-64.lock
+conda create --name YOURENV --file conda-linux-64.lock
 ```
 Then, yo can install all packages and dependencies with the yml file
 
