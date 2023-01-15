@@ -148,7 +148,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         A1 = npln.inv(mS + Om)
         A2 = A1@(mS@hReg)
         # Reg_prop = A1.T@nprd.randn(hReg.shape) + hReg  # proposal 
-        Reg_prop = nprd.randn(3)@sqrtm(A1) + A2
+        Reg_prop = nprd.randn(hReg.shape[0])@sqrtm(A1) + A2
         T1 = Y.T@X@(Reg_prop-Reg) - np.sum(Lam*np.exp(offset + X@Reg_prop) - np.exp(offset + X@Reg))
         T2 = 0.5*((Reg_prop-hReg).T@mS@(Reg_prop-hReg) - (Reg-hReg).T@mS@(Reg-hReg))  
         log_ratio = T1 + T2

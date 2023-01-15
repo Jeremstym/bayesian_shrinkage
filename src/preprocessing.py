@@ -69,7 +69,15 @@ dic_demographie = pd.read_excel("./data/covariables_demographiques.xlsx",sheet_n
 df_covariables = dic_demographie[2].merge(dic_demographie[3], on=(('DEP','DEP'),('DEP','DEP')))
 df_covariables.columns = ['Departement','nom_depart1', 'Densite', 'nom_depart2', '25ans']
 df_covariables.drop(["nom_depart1",'nom_depart2'], inplace = True, axis = 1)
-df_covariables.sort_values("Departement")
+df_covariables.drop([i if df_covariables.loc[i,"Departement"] in [971, 974, 976] else -1 for i in df_covariables.index], inplace = True, axis = 0, errors='ignore')
+
+df_covariables.to_csv('data/covariables.csv', index = False)
 
 #AGAINNN a df for death from covid only this time during the first wave : 
 dfcovid = pd.read_csv('data/DC_covid_1erevague.csv', delimiter=";", header = 0, parse_dates = ['jour'])
+dfcovid.set_index("jour", inplace = True)
+dfcovid = dfcovid.loc["2020-05-17"]
+dfcovid = pd.DataFrame({"Mort":dfcovid.groupby("dep")["Dc_Elec_Covid_cum"].sum()})
+dfcovid.drop(['971', '972', '973', '974', '975', '976', '977', '978'], inplace = True)
+
+dfcovid.to_csv('data/DC_covid_preprocess.csv')
