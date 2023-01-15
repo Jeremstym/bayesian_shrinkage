@@ -64,7 +64,8 @@ def GLSP_count(Y, eta=None, prior="EH", mc=3000, burn=500, HP=[0.5,1]):
         ## u and gam (IG prior)
         if prior == "IG":
             # u
-            u = spst.invgamma(a=alpha+gam).rvs(scale=beta*gam+lam, size=m)
+            u = spst.invgamma(a=alpha+gam, scale=beta*gam+lam).rvs(size=m)
+            u_pos[r,:] = u
             # gam
             bb = 0.1
             gam_new = min(max(gam+bb*nprd.normal(), 0.001), 150)
@@ -178,7 +179,7 @@ def GLSP_count_reg(Y, X, offset=None, prior="EH", mc=3000, burn=500, HP= [1,1]) 
         ## u and gam (IG prior)
         if prior == "IG":
             # u
-            u = spst.invgamma(a=alpha+gam).rvs(scale=beta*gam+lam, size=number_observation)
+            u = spst.invgamma(a=alpha+gam, scale=beta*gam+lam).rvs(size=number_observation)
             # gam
             bb = 0.1
             gam_new = min(max(gam+bb*nprd.normal(), 0.001), 150)
