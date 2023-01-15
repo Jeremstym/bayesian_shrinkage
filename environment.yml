@@ -19,7 +19,6 @@ dependencies:
   - statsmodels=0.13
   # Plots
   - matplotlib=3.6
-  - seaborn=0.12
   - plotly=5.11
   - topojson=1.5
   # Jupyter
