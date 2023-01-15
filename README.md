@@ -13,7 +13,13 @@ Or download the zip from the [github](https://github.com/Jeremstym/bayesian_shri
 
 ### Create conda enviromnent
 
-You can create a conda environment before installing all packages (fist line if you work on windows, second one on linux)
+First, go to the file
+
+```bash
+cd bayesian_shrinkage
+```
+
+You can now create a conda environment before installing all packages (fist line if you work on windows, second one on linux)
 
 ```bash
 conda create --name YOURENV --file conda-osx-64.lock
