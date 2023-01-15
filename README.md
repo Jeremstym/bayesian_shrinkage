@@ -21,9 +21,6 @@ conda create --name YOURENV --file conda-linux-64.lock
 ```
 Then, yo can install all packages and dependencies with the yml file
 
-```bash
-conda env update -f environment.yml
-```
 If you want to try the visualization, you have to use special packages (not in the yml file)
 
 ```bash
